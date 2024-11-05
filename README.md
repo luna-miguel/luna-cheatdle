@@ -1,1 +1,1 @@
-# AI-ML-Football-Analysis-CV-system
+# Wordle Information Theory
