@@ -9,7 +9,6 @@ def load_dict(file_name):
 DICT_GUESSING = load_dict('wordle-answers-alphabetical.txt')
 DICT_ANSWERS = load_dict('words5-from-sgb')
 ANSWER = random.choice(DICT_ANSWERS)
-ANSWER = "JELLO"
 
 WIDTH = 600
 HEIGHT = 700
@@ -118,6 +117,13 @@ while animating:
                     UNGUESSED = determine_unguessed_letters(GUESSES)
                     GAME_OVER = INPUT == ANSWER
                     INPUT = ""
+            
+            elif event.key == pygame.K_SPACE:
+                GAME_OVER = False
+                ANSWER = random.choice(DICT_ANSWERS)
+                GUESSES = []
+                UNGUESSED = ALPHABET
+                INPUT = ""
             
             elif len(INPUT) < 5 and not GAME_OVER:
                 INPUT += event.unicode.upper()

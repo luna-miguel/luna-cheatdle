@@ -1388,6 +1388,7 @@ payer
 peace
 peach
 pearl
+pears
 pecan
 pedal
 penal
