@@ -37,7 +37,8 @@ with main:
     with wordle:
         st.subheader('Wordle Results')
         with st.container(border=True, height=530):
-            count = st_autorefresh(interval=2000, limit=100, key="imagereloader")
+            count = st_autorefresh(
+                interval=2000, limit=100, key="imagereloader")
             path = 'captures/capture.png'
 
             if os.path.isfile(path) and magic.from_file(path) != 'empty':
