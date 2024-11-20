@@ -1,18 +1,16 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import pickle
-import magic
 import os
+import json
+import magic
+import pickle
+import numpy as np
+import pandas as pd
+import streamlit as st
 from streamlit_autorefresh import st_autorefresh
-import main
 
 st.set_page_config(
     page_title="Cheatdle",
     page_icon="🟩"
 )
-
-st.write(main.ANSWER)
 
 main, forest, analysis = st.tabs(["main", "forest", "analysis"])
 
@@ -27,6 +25,9 @@ with main:
         }  # placeholder
 
     [wordle, stats] = st.columns([0.6, 0.4])
+
+    data = dict()
+
     with stats:
         st.subheader('Word Suggestions')
 
@@ -43,13 +44,18 @@ with main:
             count = st_autorefresh(
                 interval=2000, limit=100, key="imagereloader")
             path = 'captures/capture.png'
+            f = open('data/data.json')
 
             if os.path.isfile(path) and magic.from_file(path) != 'empty':
                 path = 'captures/capture.png'
+                data = json.load(f)
             elif count:
                 path = 'captures/blank.png'
+                data = json.load(f)
 
             st.image(path)
+
+    st.write(data)  # temp
 
 
 with forest:
