@@ -5,11 +5,14 @@ import pickle
 import magic
 import os
 from streamlit_autorefresh import st_autorefresh
+import main
 
 st.set_page_config(
     page_title="Cheatdle",
     page_icon="🟩"
 )
+
+st.write(main.ANSWER)
 
 main, forest, analysis = st.tabs(["main", "forest", "analysis"])
 
