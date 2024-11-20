@@ -6,8 +6,8 @@ def load_dict(file_name):
         words = [line.strip() for line in f.readlines()]
         return [word.upper() for word in words]
 
-DICT_GUESSING = load_dict('wordle-answers.txt')
-DICT_ANSWERS = load_dict('valid-wordle-words.txt')
+DICT_GUESSING = load_dict('data/wordle-answers.txt')
+DICT_ANSWERS = load_dict('data/valid-wordle-words.txt')
 ANSWER = random.choice(DICT_ANSWERS)
 
 WIDTH = 600

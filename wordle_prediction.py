@@ -63,8 +63,8 @@ with forest:
         submitted = st.form_submit_button("Predict")
 
     if submitted:
-        tweets = pd.read_csv("tweets.csv")
-        words = pd.read_csv("words_freq.csv")
+        tweets = pd.read_csv("data/tweets.csv")
+        words = pd.read_csv("data/words_freq.csv")
 
         tweets["score"] = tweets["tweet_text"].str[11]
         tweets["score"] = pd.to_numeric(tweets['score'], errors='coerce')
