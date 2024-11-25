@@ -1,4 +1,7 @@
 streamlit
 pandas
 numpy
-pickle
+streamlit-autorefresh
+textblob
+langchain-community
+langchain-openai

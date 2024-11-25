@@ -64,11 +64,9 @@ with forest:
 
     with st.form("my_form"):
         word = st.text_input(
-            "Enter any five-letter combination",
+            "Enter any five-letter combination.",
             max_chars=5
         )
-        occurrence = st.number_input(
-            "Enter the word's frequency:", max_value=0.00)
 
         submitted = st.form_submit_button("Predict")
 
@@ -83,6 +81,10 @@ with forest:
         words.dropna(inplace=True)
         words["day"] = pd.to_numeric(words['day'], errors='coerce')
 
+        freqs = pd.read_csv("letter-frequencies.csv")
+        freqs = freqs[["Letter", "English"]]
+        freqs = freqs["English"].tolist()
+
         df = pd.merge(words, tweets, on='day')
         df.drop(columns=['tweet_id'], inplace=True)
 
@@ -96,7 +98,7 @@ with forest:
         #    3. Convert to ASCII number using ord() function
         #    4. subtract 96 to simplify char to number representation (a = 1, b = 2, c = 3, ...)
 
-        def predict_score(word, occurrence):
+        def predict_score(word):
 
             if (not word.isalpha() or len(word) != 5):
                 raise Exception(
@@ -109,17 +111,21 @@ with forest:
             df["letter_3"] = df["word"].str.lower().str[2].apply(ord) - 96
             df["letter_4"] = df["word"].str.lower().str[3].apply(ord) - 96
             df["letter_5"] = df["word"].str.lower().str[4].apply(ord) - 96
+            df["freq"] =    freqs[df["letter_1"][0]] + \
+                            freqs[df["letter_2"][0]] + \
+                            freqs[df["letter_3"][0]] + \
+                            freqs[df["letter_4"][0]] + \
+                            freqs[df["letter_5"][0]]
 
-            df["occurrence"] = [occurrence]
             df.drop(columns=["word"], inplace=True)
 
             return model.predict(df)
 
         averages = df.groupby("word", as_index=False)['score'].mean()
 
-        def get_scores(word, base=None, power=None):
+        def get_scores(word):
 
-            prediction = predict_score(word, occurrence)[0]
+            prediction = predict_score(word)[0]
 
             # If word isn't found in tweet data, None is returned for the average score
             average = None
@@ -128,7 +134,7 @@ with forest:
 
             return prediction, average
 
-        prediction, average = get_scores(word, occurrence)
+        prediction, average = get_scores(word)
 
         st.write(f"Word: {word}")
         st.write(
