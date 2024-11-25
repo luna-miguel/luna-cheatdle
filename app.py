@@ -25,7 +25,7 @@ with main:
     # Load datasets
     try:
         words_freq = pd.read_csv("data/words_freq.csv")
-        tweets = pd.read_csv("data/tweeets.csv")
+        tweets = pd.read_csv("data/tweets.csv")
     except FileNotFoundError as e:
         st.error(f"Error: {e}. Ensure the file paths are correct.")
         st.stop()
