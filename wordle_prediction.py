@@ -71,7 +71,7 @@ with forest:
         submitted = st.form_submit_button("Predict")
 
     if submitted:
-        tweets = pd.read_csv("data/tweets.csv")
+        tweets = pd.read_csv("data/tweets.zip")
         words = pd.read_csv("data/words_freq.csv")
 
         tweets["score"] = tweets["tweet_text"].str[11]
@@ -81,7 +81,7 @@ with forest:
         words.dropna(inplace=True)
         words["day"] = pd.to_numeric(words['day'], errors='coerce')
 
-        freqs = pd.read_csv("letter-frequencies.csv")
+        freqs = pd.read_csv("data/letter-frequencies.csv")
         freqs = freqs[["Letter", "English"]]
         freqs = freqs["English"].tolist()
 

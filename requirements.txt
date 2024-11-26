@@ -5,3 +5,4 @@ streamlit-autorefresh
 textblob
 langchain-community
 langchain-openai
+pygame
