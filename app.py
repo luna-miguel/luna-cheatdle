@@ -31,7 +31,7 @@ with sentiment:
     # Load datasets
     try:
         words_freq = pd.read_csv("data/words_freq.csv")
-        tweets = pd.read_csv("data/tweets.csv")
+        tweets = pd.read_csv("data/tweets.zip")
     except FileNotFoundError as e:
         st.error(f"Error: {e}. Ensure the file paths are correct.")
         st.stop()
