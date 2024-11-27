@@ -6,3 +6,5 @@ textblob
 langchain-community
 langchain-openai
 pygame
+altair
+plotly
