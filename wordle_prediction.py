@@ -106,11 +106,11 @@ with forest:
 
             df = pd.DataFrame()
             df["word"] = [word]
-            df["letter_1"] = df["word"].str.lower().str[0].apply(ord) - 96
-            df["letter_2"] = df["word"].str.lower().str[1].apply(ord) - 96
-            df["letter_3"] = df["word"].str.lower().str[2].apply(ord) - 96
-            df["letter_4"] = df["word"].str.lower().str[3].apply(ord) - 96
-            df["letter_5"] = df["word"].str.lower().str[4].apply(ord) - 96
+            df["letter_1"] = df["word"].str.lower().str[0].apply(ord) - 97
+            df["letter_2"] = df["word"].str.lower().str[1].apply(ord) - 97
+            df["letter_3"] = df["word"].str.lower().str[2].apply(ord) - 97
+            df["letter_4"] = df["word"].str.lower().str[3].apply(ord) - 97
+            df["letter_5"] = df["word"].str.lower().str[4].apply(ord) - 97
             df["freq"] =    freqs[df["letter_1"][0]] + \
                             freqs[df["letter_2"][0]] + \
                             freqs[df["letter_3"][0]] + \
@@ -131,17 +131,16 @@ with forest:
             average = None
             if word in averages["word"].values:
                 average = averages[averages["word"] == word]["score"][0]
-
-            return prediction, average
+                return prediction, average
 
         prediction, average = get_scores(word)
 
-        st.write(f"Word: {word}")
-        st.write(
-            "Predicted average score via random forests: \t{:0.2f}".format(prediction))
+        st.subheader(f"Results for '{word}':")
+        st.markdown(
+            "**🌳 Predicted average score via random forests:** \t{:0.2f}".format(prediction))
         # Print average score according to tweet data if the word exists in it
-        st.write(("No data found for this word in tweet data." if average ==
-                 None else "Average score via tweet data: \t\t\t{:0.2f}".format(average)))
+        st.markdown(("**𝕏 No data found for this word in tweet data.**" if average ==
+                 None else "**𝕏 Average score via tweet data:** \t\t\t{:0.2f}".format(average)))
 
 with analysis:
     st.header("Sentiment Analysis")
