@@ -4,9 +4,12 @@ import json
 import streamlit as st
 from PIL import Image
 
+st.set_page_config(
+    page_title="Cheatdle",
+    page_icon="🟩"
+)
+
 # Function to load dictionary
-
-
 def load_dict(file_name):
     with open(file_name, 'r') as f:
         words = [line.strip() for line in f.readlines()]
@@ -43,16 +46,12 @@ if "guesses" not in st.session_state:
     st.session_state["unguessed"] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     st.session_state["game_over"] = False
 
-# Function to determine unguessed letters
-
-
+# Function to determine unguessed letters:
 def determine_unguessed_letters(guesses):
     guessed_letters = "".join(guesses)
     return "".join([letter for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if letter not in guessed_letters])
 
-# Function to determine color of letters
-
-
+# Function to determine color of letters:
 def determine_color(guess, j):
     letter = guess[j]
     if letter == st.session_state["answer"][j]:
@@ -62,9 +61,7 @@ def determine_color(guess, j):
     else:
         return GREY
 
-# Function to draw guesses
-
-
+# Function to draw guesses:
 def draw_guesses(surface):
     y = T_MARGIN
     for i in range(6):
@@ -89,9 +86,7 @@ def draw_guesses(surface):
             x += SQ_SIZE + MARGIN
         y += SQ_SIZE + MARGIN
 
-# Function to render the game frame
-
-
+# Function to render the game frame:
 def render_frame():
     surface = pygame.Surface((WIDTH, HEIGHT))
     surface.fill("white")
@@ -102,30 +97,35 @@ def render_frame():
 
 
 # Streamlit interface
-st.title("Wordle in Streamlit")
+[wordle, empty, stats] = st.columns([0.5, 0.1, 0.4])
 
+with wordle:
+    st.subheader("Wordle")
 
-if st.session_state["game_over"]:
-    st.success("Game Over!")
-    st.write(f"The correct word was: {st.session_state['answer']}")
+    if st.session_state["game_over"]:
+        st.success("Game Over!")
+        st.write(f"The correct word was: {st.session_state['answer']}")
 
-frame = render_frame()
-frame_image = Image.fromarray(frame)
-st.image(frame_image)
+    frame = render_frame()
+    frame_image = Image.fromarray(frame)
+    st.image(frame_image)
 
-# Input field for guesses
-guess = st.text_input("Enter your guess:", max_chars=5).upper()
-if st.button("Submit Guess") and len(guess) == 5:
-    if guess in DICT_GUESSING:
-        st.session_state["guesses"].append(guess)
-        st.session_state["unguessed"] = determine_unguessed_letters(
-            st.session_state["guesses"])
-        st.session_state["game_over"] = (
-            guess == st.session_state["answer"] or len(st.session_state["guesses"]) == 6)
+    # Input field for guesses
+    guess = st.text_input("Enter your guess:", max_chars=5).upper()
+    if st.button("Submit Guess") and len(guess) == 5:
+        if guess in DICT_GUESSING:
+            st.session_state["guesses"].append(guess)
+            st.session_state["unguessed"] = determine_unguessed_letters(
+                st.session_state["guesses"])
+            st.session_state["game_over"] = (
+                guess == st.session_state["answer"] or len(st.session_state["guesses"]) == 6)
 
-if st.button("Restart Game"):
-    st.session_state["guesses"] = []
-    st.session_state["input"] = ""
-    st.session_state["answer"] = random.choice(DICT_ANSWERS)
-    st.session_state["unguessed"] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    st.session_state["game_over"] = False
+    if st.button("Restart Game"):
+        st.session_state["guesses"] = []
+        st.session_state["input"] = ""
+        st.session_state["answer"] = random.choice(DICT_ANSWERS)
+        st.session_state["unguessed"] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        st.session_state["game_over"] = False
+
+with stats:
+    st.subheader("Guess Suggestions")
