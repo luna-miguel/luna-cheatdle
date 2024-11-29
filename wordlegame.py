@@ -554,6 +554,9 @@ with stats:
         df = pd.DataFrame(stats)
         st.dataframe(df, width=200, hide_index=True)
 
+
+st.divider()
+
 st.subheader(f'Possible Answers: {len(st.session_state["possibilities"])}')
 if st.checkbox(label="Show Possible Answers"):
     st.write(st.session_state["possibilities"])
