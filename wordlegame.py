@@ -306,18 +306,18 @@ def get_next_guess(guesses, patterns, possibilities):
 
 
 def analyze_guesses(guess, possibilities):
-    print("\nGuess:", guess)
+    # print("\nGuess:", guess)
     pattern = get_pattern(guess, st.session_state["answer"].lower())
     # guesses.append(guess)
     st.session_state["patterns"].append(pattern)
 
     possibilities = get_possible_words(guess, pattern, possibilities)
-    print("Possibilities:", possibilities[:12])
-    print("Possibilities count:", len(possibilities))
+    # print("Possibilities:", possibilities[:12])
+    # print("Possibilities count:", len(possibilities))
 
     next_guess = get_next_guess(
         st.session_state["guesses_lower"], st.session_state["patterns"], possibilities)
-    print('\nNext best Guess:', next_guess)
+    # print('\nNext best Guess:', next_guess)
     return possibilities
 
 
@@ -378,6 +378,7 @@ if "guesses" not in st.session_state:
     st.session_state["guesses_lower"] = []
     st.session_state["input"] = ""
     st.session_state["answer"] = ANSWER
+    # print('Answer:', ANSWER)
     st.session_state["unguessed"] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     st.session_state["game_over"] = False
     st.session_state["priors"] = get_frequency_based_priors()
