@@ -18,6 +18,8 @@ st.set_page_config(
     page_icon="🟩"
 )
 
+st.logo('captures/cheatdle.png')
+
 
 # Begin 3Blue1Brown code below:
 
@@ -481,8 +483,6 @@ if st.session_state["game_over"]:
     else:
         st.error(
             f"Game Over! The correct word was {st.session_state['answer']}")
-
-st.header("Header")
 
 [wordle, empty, stats] = st.columns([0.5, 0.1, 0.4])
 
