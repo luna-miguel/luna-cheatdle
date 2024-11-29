@@ -491,28 +491,47 @@ with wordle:
     with st.container(border=True, height=400):
         st.image(frame_image)
 
-    # Input field for guesses
-    if not st.session_state["game_over"]:
-        st.text_input("Enter your guess:", max_chars=5,
-                      key='guess', on_change=input_guess).upper()
+    [input, restart] = st.columns([0.7, 0.4])
 
-    if st.button("Restart Game"):
-        st.session_state["guesses"] = []
-        st.session_state["guesses_lower"] = []
-        st.session_state["input"] = ""
-        st.session_state["answer"] = random.choice(DICT_ANSWERS)
-        st.session_state["unguessed"] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        st.session_state["game_over"] = False
-        st.session_state["game_won"] = False
-        st.session_state["priors"] = get_frequency_based_priors()
-        st.session_state["next_guess_map"] = {}
-        st.session_state["patterns"] = []
-        st.session_state["possibilities"] = list(
-            filter(lambda w: st.session_state["priors"][w] > 0, all_words))
-        # Default guess suggestions:
-        st.session_state["suggestions"] = {"0": {"trace": 5.8003640125599665}, "1": {"stare": 5.820775159036701}, "2": {"snare": 5.823403587185409}, "3": {"slate": 5.872115140997043}, "4": {
-            "raise": 5.877133130432676}, "5": {"irate": 5.8857096269200975}, "6": {"crate": 5.895912778048746}, "7": {"crane": 5.896998055971093}, "8": {"arose": 5.9015186142727085}, "9": {"arise": 5.91076001137177}}
-        st.rerun()
+    with input:
+        # Input field for guesses
+        if not st.session_state["game_over"]:
+            st.text_input("Enter your guess:", max_chars=5,
+                          key='guess', on_change=input_guess).upper()
+
+    with restart:
+        m = st.markdown("""
+            <style>
+            div.stButton > button:first-child {
+                background-color: #eb4242;
+                border-color: #eb4242;
+                color: #ffffff;
+                margin-top: 0.7rem;
+            }
+            div.stButton > button:hover {
+                background-color: #c22121;
+                border-color: #c22121;
+                color: #ffffff;
+                }
+            </style>""", unsafe_allow_html=True)
+
+        if st.button("Restart Game"):
+            st.session_state["guesses"] = []
+            st.session_state["guesses_lower"] = []
+            st.session_state["input"] = ""
+            st.session_state["answer"] = random.choice(DICT_ANSWERS)
+            st.session_state["unguessed"] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            st.session_state["game_over"] = False
+            st.session_state["game_won"] = False
+            st.session_state["priors"] = get_frequency_based_priors()
+            st.session_state["next_guess_map"] = {}
+            st.session_state["patterns"] = []
+            st.session_state["possibilities"] = list(
+                filter(lambda w: st.session_state["priors"][w] > 0, all_words))
+            # Default guess suggestions:
+            st.session_state["suggestions"] = {"0": {"trace": 5.8003640125599665}, "1": {"stare": 5.820775159036701}, "2": {"snare": 5.823403587185409}, "3": {"slate": 5.872115140997043}, "4": {
+                "raise": 5.877133130432676}, "5": {"irate": 5.8857096269200975}, "6": {"crate": 5.895912778048746}, "7": {"crane": 5.896998055971093}, "8": {"arose": 5.9015186142727085}, "9": {"arise": 5.91076001137177}}
+            st.rerun()
 
 with stats:
     st.subheader('Guess Suggestions')
