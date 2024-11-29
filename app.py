@@ -19,7 +19,12 @@ st.set_page_config(
     page_icon="🟩"
 )
 
-sentiment, rag = st.tabs(["sentiment", "rag"])
+st.logo('captures/cheatdle.png')
+
+wordle, sentiment, rag = st.tabs(["wordle", "sentiment", "rag"])
+
+with wordle:
+    st.header('Wordle')
 
 with sentiment:
     st.header("Sentiment Analysis")
