@@ -1,8 +1,6 @@
 import json
 import os
 import math
-import time
-# import magic  # used before pygame connection
 import pygame
 import random
 import numpy as np
@@ -11,7 +9,6 @@ from PIL import Image
 import streamlit as st
 import itertools as it
 from scipy.stats import entropy
-from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(
     page_title="Cheatdle",
