@@ -145,6 +145,7 @@ Use this space to show useful examples of how a project can be used. Additional 
 ![image](https://github.com/user-attachments/assets/6b986326-ea85-491e-a708-8c822d67a6e6)
 
 ### Wordle Answer Sentiment Analysis
+![image](https://github.com/user-attachments/assets/80cc87bf-f93c-443b-b6f1-fa74e752d8ec)
 
 ### Cheatdle Project RAG
 ![image](https://github.com/user-attachments/assets/63c00a0d-0329-4266-8cd3-c233fb5fd42d)
