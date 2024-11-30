@@ -141,6 +141,7 @@ Use this space to show useful examples of how a project can be used. Additional 
 ### Wordle Solver
 
 ### Wordle Score Predictor
+![image](https://github.com/user-attachments/assets/6b986326-ea85-491e-a708-8c822d67a6e6)
 
 ### Wordle Answer Sentiment Analysis
 
