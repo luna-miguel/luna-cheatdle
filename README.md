@@ -147,6 +147,8 @@ Use this space to show useful examples of how a project can be used. Additional 
 ### Wordle Answer Sentiment Analysis
 
 ### Cheatdle Project RAG
+![image](https://github.com/user-attachments/assets/63c00a0d-0329-4266-8cd3-c233fb5fd42d)
+
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
