@@ -139,6 +139,7 @@ python -m ensurepip --upgrade
 Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
 
 ### Wordle Solver
+![image](https://github.com/user-attachments/assets/74004d6c-73d1-4ee8-8ecc-be0d93a828cb)
 
 ### Wordle Score Predictor
 ![image](https://github.com/user-attachments/assets/6b986326-ea85-491e-a708-8c822d67a6e6)
