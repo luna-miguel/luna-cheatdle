@@ -566,8 +566,12 @@ with wordle:
     st.divider()
     
     st.subheader(f'Possible Answers: {len(st.session_state["possibilities"])}')
-    if st.checkbox(label="Show Possible Answers"):
+    show_answers = st.checkbox(label="Show Possible Answers")
+
+    if show_answers:
         st.write(st.session_state["possibilities"])
+    else:
+        st.empty()  # Clear the content when unchecked
 
 
 with sentiment:
