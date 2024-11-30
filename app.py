@@ -25,7 +25,7 @@ st.set_page_config(
     page_icon="🟩"
 )
 
-st.logo('captures/cheatdle.png')
+st.image('captures/cheatdle.png', width=300)
 
 # Begin 3Blue1Brown code below:
 
@@ -575,110 +575,122 @@ with wordle:
 
 
 with sentiment:
-    st.header("Sentiment Analysis")
-    st.markdown(
-        """
-    Enter any **5-letter Wordle word**, and we'll show how people on Twitter felt about it! 🎉
-    """)
+    st.header("📊 Sentiment Analysis")
+st.markdown(
+    """
+    Enter any **5-letter Wordle word**, and we'll analyze how people on Twitter felt about it! 🎉
+    """
+)
 
-    # Load datasets
-    try:
-        words_freq = pd.read_csv("data/words_freq.csv")
-        tweets = pd.read_csv("data/tweets.zip")
-    except FileNotFoundError as e:
-        st.error(f"Error: {e}. Ensure the file paths are correct.")
-        st.stop()
+# Load datasets
+try:
+    words_freq = pd.read_csv("data/words_freq.csv")
+    tweets = pd.read_csv("data/tweets.zip")
+except FileNotFoundError as e:
+    st.error(f"Error: {e}. Ensure the file paths are correct.")
+    st.stop()
 
-    # Input Word
-    word = st.text_input("Enter a 5-letter Wordle word:", max_chars=5, key="sentiment").lower()
+# Input Word
+word = st.text_input("Enter a 5-letter Wordle word:", max_chars=5, key="sentiment").lower()
 
-    if word:
-        # Validate the word
-        if not word.isalpha() or len(word) != 5:
-            st.error("Please enter a valid 5-letter word.")
+if word:
+    # Validate the word
+    if not word.isalpha() or len(word) != 5:
+        st.error("Please enter a valid 5-letter word.")
+    else:
+        # Check if word exists in dataset
+        word_entry = words_freq[words_freq["word"].str.lower() == word]
+
+        if word_entry.empty:
+            st.error(f"The word '{word}' was not found in the dataset.")
         else:
-            # Check if word exists in dataset
-            word_entry = words_freq[words_freq["word"].str.lower() == word]
+            # Get Wordle day and filter tweets
+            wordle_day = int(word_entry.iloc[0]["day"])
+            wordle_tweets = tweets[tweets["wordle_id"] == wordle_day]
 
-            if word_entry.empty:
-                st.error(f"The word '{word}' was not found in the dataset.")
+            if wordle_tweets.empty:
+                st.error(f"No tweets found for Wordle #{wordle_day}.")
             else:
-                # Get Wordle day and filter tweets
-                wordle_day = int(word_entry.iloc[0]["day"])
-                wordle_tweets = tweets[tweets["wordle_id"] == wordle_day]
+                st.success(f"Analyzing tweets for Wordle #{wordle_day}...")
 
-                if wordle_tweets.empty:
-                    st.error(f"No tweets found for Wordle #{wordle_day}.")
+                # Sentiment Analysis
+                sentiments = {"positive": 0, "neutral": 0, "negative": 0}
+                polarity_scores = []
+
+                for _, row in wordle_tweets.iterrows():
+                    text = row["tweet_text"]
+                    # Skip grid-only tweets
+                    if text.count('\n') <= 1 and text.startswith("Wordle"):
+                        continue
+
+                    cleaned_text = ' '.join([
+                        line for line in text.split('\n')
+                        if not line.strip().startswith(('Wordle', '⬛', '⬜', '🟨', '🟩'))
+                    ])
+
+                    if cleaned_text.strip():
+                        analysis = TextBlob(cleaned_text)
+                        polarity = analysis.sentiment.polarity
+                        polarity_scores.append(polarity)
+
+                        if polarity > 0:
+                            sentiments["positive"] += 1
+                        elif polarity < 0:
+                            sentiments["negative"] += 1
+                        else:
+                            sentiments["neutral"] += 1
+
+                total = sum(sentiments.values())
+
+                # Results Display
+                if total == 0:
+                    st.warning("No valid tweets found for analysis.")
                 else:
-                    st.success(f"Analyzing tweets for Wordle #{wordle_day}...")
+                    avg_sentiment = sum(polarity_scores) / len(polarity_scores)
+                    sentiment_label = (
+                        "😊 Positive" if avg_sentiment > 0
+                        else "😐 Neutral" if avg_sentiment == 0
+                        else "😟 Negative"
+                    )
+                    sentiment_color = "green" if avg_sentiment > 0 else "gray" if avg_sentiment == 0 else "red"
 
-                    # Sentiment Analysis
-                    sentiments = {"positive": 0, "neutral": 0, "negative": 0}
-                    polarity_scores = []
+                    st.subheader(f"Results for '{word}' (Wordle #{wordle_day}):")
+                    st.markdown(f"**Total Tweets Analyzed:** {total}")
+                    st.markdown(
+                        f"**Average Sentiment:** <span style='color:{sentiment_color}; font-weight:bold;'>{sentiment_label} ({avg_sentiment:.3f})</span>",
+                        unsafe_allow_html=True,
+                    )
 
-                    for _, row in wordle_tweets.iterrows():
-                        text = row["tweet_text"]
-                        # Skip grid-only tweets
-                        if text.count('\n') <= 1 and text.startswith("Wordle"):
-                            continue
+                    # Sentiment Breakdown
+                    st.markdown("### Sentiment Breakdown")
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Positive 😊", sentiments["positive"])
+                    col2.metric("Neutral 😐", sentiments["neutral"])
+                    col3.metric("Negative 😟", sentiments["negative"])
 
-                        cleaned_text = ' '.join([
-                            line for line in text.split('\n')
-                            if not line.strip().startswith(('Wordle', '⬛', '⬜', '🟨', '🟩'))
-                        ])
+                    # Sentiment Slider
+                    st.markdown("### Average Sentiment Score")
+                    st.slider(
+                        label="Sentiment Score",
+                        min_value=-1.0,
+                        max_value=1.0,
+                        value=avg_sentiment,
+                        step=0.001,
+                        disabled=True,
+                        help="This reflects the average sentiment score for the analyzed tweets.",
+                    )
 
-                        if cleaned_text.strip():
-                            analysis = TextBlob(cleaned_text)
-                            polarity = analysis.sentiment.polarity
-                            polarity_scores.append(polarity)
-
-                            if polarity > 0:
-                                sentiments["positive"] += 1
-                            elif polarity < 0:
-                                sentiments["negative"] += 1
-                            else:
-                                sentiments["neutral"] += 1
-
-                    total = sum(sentiments.values())
-
-                    # Results Display
-                    if total == 0:
-                        st.warning("No valid tweets found for analysis.")
-                    else:
-                        avg_sentiment = sum(polarity_scores) / \
-                            len(polarity_scores)
-                        sentiment_label = "😊 Positive" if avg_sentiment > 0 else "😐 Neutral" if avg_sentiment == 0 else "😟 Negative"
-
-                        st.subheader(
-                            f"Results for '{word}' (Wordle #{wordle_day}):")
-                        st.markdown(f"**Total Tweets Analyzed:** {total}")
-                        st.markdown(
-                            f"**Average Sentiment:** {sentiment_label} ({avg_sentiment:.3f})")
-                        st.markdown("### Sentiment Breakdown:")
-                        col1, col2, col3 = st.columns(3)
-                        col1.metric("Positive 😊", sentiments["positive"])
-                        col2.metric("Neutral 😐", sentiments["neutral"])
-                        col3.metric("Negative 😟", sentiments["negative"])
-
-                        # Sentiment Slider
-                        st.markdown("### Sentiment Visualization:")
-                        st.slider(
-                            label="Average Sentiment Score",
-                            min_value=-1.0,
-                            max_value=1.0,
-                            value=float(avg_sentiment),
-                            step=0.01,
-                            disabled=True,
-                        )
-
-                        # Additional Stats
-                        st.markdown("### Additional Insights:")
-                        st.markdown(
-                            f"- **Positive Percentage:** {sentiments['positive'] / total * 100:.2f}%")
-                        st.markdown(
-                            f"- **Neutral Percentage:** {sentiments['neutral'] / total * 100:.2f}%")
-                        st.markdown(
-                            f"- **Negative Percentage:** {sentiments['negative'] / total * 100:.2f}%")
+                    # Additional Insights
+                    st.markdown("### Additional Insights")
+                    st.markdown(
+                        f"- **Positive Percentage:** {sentiments['positive'] / total * 100:.2f}%"
+                    )
+                    st.markdown(
+                        f"- **Neutral Percentage:** {sentiments['neutral'] / total * 100:.2f}%"
+                    )
+                    st.markdown(
+                        f"- **Negative Percentage:** {sentiments['negative'] / total * 100:.2f}%"
+                    )
 
 with forest:
     st.header("Score Predictor")
