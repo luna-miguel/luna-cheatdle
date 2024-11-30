@@ -493,7 +493,7 @@ with wordle:
     [game, empty, stats] = st.columns([0.5, 0.1, 0.4])
 
     with game:
-        st.subheader("Wordle Game")
+        st.subheader("🎮 Wordle Game")
 
         frame = render_frame()
         frame_image = Image.fromarray(frame)
@@ -575,7 +575,7 @@ with wordle:
 
 
 with sentiment:
-    st.header("Sentiment Analysis")
+    st.header("🚀 Sentiment Analysis")
     st.markdown(
         """
         Enter any **5-letter Wordle word**, and we'll analyze how people on Twitter felt about it! 🎉  
@@ -678,7 +678,7 @@ with sentiment:
                         st.plotly_chart(fig, use_container_width=True)
 
 with forest:
-    st.header("Score Predictor")
+    st.header("🎯 Score Predictor")
     # Load datasets
     try:
         tweets = pd.read_csv("data/tweets.zip")
@@ -916,7 +916,7 @@ with rag:
             raise e
 
     # Page title
-    st.title("Ask about our Wordle Final Project")
+    st.title("📈 Ask about our Wordle Final Project")
 
     # Initialize session state for messages
     if "messages" not in st.session_state:
