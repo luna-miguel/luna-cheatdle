@@ -14,11 +14,9 @@
 <br />
 <div align="center">
   <a href="https://github.com/ahmadbasyouni10/Cheatdle">
-    <img src="captures/cheatdle.png" alt="Logo" width="400" height="80">
+    <img src="captures/cheatdle.png" alt="Logo" width="550" height="80">
   </a>
-
-  <h2 align="center">Cheatdle</h2>
-
+  <h1 align="center">Cheatdle</h1>
   <p align="center">
     <br />
     <a href="https://github.com/ahmadbasyouni10/Cheatdle"><strong>Explore »</strong></a>
@@ -64,7 +62,11 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Cheatdle Screenshot][product-screenshot]]()
+  <br/> <div align="center">
+    <a href="">
+      <img src="captures/example.png" alt="Logo" width="400">
+    </a>
+  </div> <br/>
 
 Cheatdle is an application to maximize efficiency when playing Wordle, using information theory and machine learning. 
 
@@ -80,9 +82,9 @@ You can learn more about this project by referring to the project design documen
 [![SciPy][Scipy]][Scipy-url]
 [![Scikit-Learn][Scikit-Learn]][Scikit-url]
 [![Plotly][Plotly]][Plotly-url]
-[![Pygame][Pygame]][Pygame-url]
 [![OpenAI][OpenAI]][OpenAI-url]
 [![Streamlit][Streamlit]][Streamlit-url]
+[![Pygame][Pygame]][Pygame-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -206,16 +208,15 @@ Special thanks to:
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/github_username/repo_name.svg?style=for-the-badge
-[contributors-url]: 
-https://github.com/ahmadbasyouni10/Cheatdle/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/github_username/repo_name.svg?style=for-the-badge
-[forks-url]: https://github.com/ahmadbasyouni10/Cheatdle/forks
-[stars-shield]: https://img.shields.io/github/stars/github_username/repo_name.svg?style=for-the-badge
-[stars-url]: https://github.com/ahmadbasyouni10/Cheatdle/stargazers
-[issues-shield]: https://img.shields.io/github/issues/github_username/repo_name.svg?style=for-the-badge
-[issues-url]: https://github.com/ahmadbasyouni10/Cheatdle/issues
-[license-shield]: https://img.shields.io/github/license/github_username/repo_name.svg?style=for-the-badge
+[contributors-shield]: https://img.shields.io/github/contributors/ahmadbasyouni10/cheatdle.svg?style=for-the-badge
+[contributors-url]: https://github.com/ahmadbasyouni10/cheatdle/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/ahmadbasyouni10/cheatdle.svg?style=for-the-badge
+[forks-url]: https://github.com/ahmadbasyouni10/cheatdle/forks
+[stars-shield]: https://img.shields.io/github/stars/ahmadbasyouni10/cheatdle.svg?style=for-the-badge
+[stars-url]: https://github.com/ahmadbasyouni10/cheatdle/stargazers
+[issues-shield]: https://img.shields.io/github/issues/ahmadbasyouni10/cheatdle.svg?style=for-the-badge
+[issues-url]: https://github.com/ahmadbasyouni10/cheatdle/issues
+[license-shield]: https://img.shields.io/github/license/ahmadbasyouni10/cheatdle.svg?style=for-the-badge
 [license-url]: https://github.com/github_username/repo_name/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/linkedin_username
@@ -228,13 +229,13 @@ https://github.com/ahmadbasyouni10/Cheatdle/graphs/contributors
 [OpenAI-url]: https://openai.com/
 [Streamlit]: https://img.shields.io/badge/streamlit-ffffff?style=for-the-badge&logo=streamlit&logoColor=ff0000
 [Streamlit-url]: https://streamlit.io/
-[Pandas]: https://pandas.pydata.org/
-[Pandas-url]:https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white
-[Scipy]: https://scipy.org/
-[Scipy-url]:https://img.shields.io/badge/SciPy-%230C55A5.svg?style=for-the-badge&logo=scipy&logoColor=%white
-[Scikit-Learn]:https://scikit-learn.org/stable/
-[Scikit-url]:https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white
-[Plotly]:https://plotly.com/
-[Plotly-url]:https://img.shields.io/badge/Plotly-%233F4F75.svg?style=for-the-badge&logo=plotly&logoColor=white
-[Pygame]:https://www.pygame.org/news
-[Pygame-url]:https://custom-icon-badges.demolab.com/badge/pygame-013243.svg?logo=pygame
+[Pandas-url]: https://pandas.pydata.org/
+[Pandas]:https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white
+[Scipy-url]: https://scipy.org/
+[Scipy]:https://img.shields.io/badge/SciPy-%230C55A5.svg?style=for-the-badge&logo=scipy&logoColor=%white
+[Scikit-url]:https://scikit-learn.org/stable/
+[Scikit-Learn]:https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white
+[Plotly-url]:https://plotly.com/
+[Plotly]:https://img.shields.io/badge/Plotly-%233F4F75.svg?style=for-the-badge&logo=plotly&logoColor=white
+[Pygame-url]:https://www.pygame.org/news
+[Pygame]:https://custom-icon-badges.demolab.com/badge/pygame-013243.svg?logo=pygame
