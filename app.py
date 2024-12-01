@@ -15,7 +15,7 @@ import altair as alt
 import plotly.express as px
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings  # Updated import
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
