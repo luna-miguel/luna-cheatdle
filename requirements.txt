@@ -8,3 +8,4 @@ langchain-openai
 pygame
 altair
 plotly
+scipy
