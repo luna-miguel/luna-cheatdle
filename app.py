@@ -13,11 +13,6 @@ from scipy.stats import entropy
 import pickle
 import altair as alt
 import plotly.express as px
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings  # Updated import
-from langchain.chains import RetrievalQA
-from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 
 st.set_page_config(
@@ -25,7 +20,7 @@ st.set_page_config(
     page_icon="🟩"
 )
 
-st.image('captures/cheatdle.png', width=300)
+st.logo('captures/cheatdle.png')
 
 # Begin 3Blue1Brown code below:
 
@@ -41,7 +36,6 @@ WORDLE_GAME_FILE = "data/guesses.json"
 
 PATTERN_GRID_DATA = dict()
 CHUNK_LENGTH = 13000
-
 
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
@@ -108,7 +102,6 @@ def get_true_wordle_prior():
         (w, int(w in short_words))
         for w in words
     )
-
 
 def get_possible_words(guess, pattern, word_list):
     all_patterns = get_pattern_matrix([guess], word_list).flatten()
@@ -444,7 +437,7 @@ def draw_guesses(surface):
 # Begin streamlit code:
 
 
-wordle, sentiment, forest, rag = st.tabs(["Wordle", "Sentiment", "Forest", "RAG"])
+wordle, sentiment, forest= st.tabs(["Game", "Sentiment", "Forest"])
 
 with wordle:
     def load_words_dict(file_name):
@@ -575,7 +568,7 @@ with wordle:
 
 
 with sentiment:
-    st.header("Sentiment Analysis")
+    st.header("🚀 Sentiment Analysis")
     st.markdown(
         """
         Enter any **5-letter Wordle word**, and we'll analyze how people on Twitter felt about it! 🎉  
@@ -678,7 +671,7 @@ with sentiment:
                         st.plotly_chart(fig, use_container_width=True)
 
 with forest:
-    st.header("Score Predictor")
+    st.header("🎯 Score Predictor")
     # Load datasets
     try:
         tweets = pd.read_csv("data/tweets.zip")
@@ -688,7 +681,8 @@ with forest:
         st.stop()
     st.markdown(
     """
-    Enter any **5-letter Wordle word**, and we'll predict the average number of guesses it'll take someone to guess it!
+    Enter any **5-letter Wordle word**, and we'll predict the average number of guesses it'll take someone to guess it!  
+    We'll also visualize statistics from around the world and provide comparisons to see how your word will stack up.
     """)
     word = st.text_input("Enter a 5-letter Wordle word:", max_chars=5, key="forest").lower()
     if word:
@@ -844,136 +838,3 @@ with forest:
                 st.markdown(f"The predicted score of your word is **higher than {names[lower]}'s score ({scores[lower]})** and **lower than {names[higher]}'s score ({scores[higher]})**.  \n")
             c = alt.Chart(us_cities).mark_bar().encode(x=alt.X('Score:Q', scale=alt.Scale(domain=(3.5, 3.67), clamp=True)), y=alt.Y('City:O').sort('x'))
             st.altair_chart(c.properties(height = 500), use_container_width=True) 
-
-
-
-with rag:
-    # Load environment variables
-    load_dotenv()
-    api_key = os.getenv("OPENAI_API_KEY")
-
-    # Set environment variable to handle tokenizer warnings
-    os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-    # Check for API key before proceeding
-    if not api_key:
-        st.error(
-            "OpenAI API key not found! Please set OPENAI_API_KEY in your .env file")
-        st.write("1. Create a .env file in your project directory")
-        st.write(
-            "2. Add your OpenAI API key like this: OPENAI_API_KEY=sk-your_api_key_here")
-        st.write(
-            "3. Make sure the .env file is in the same directory as your Python script")
-        st.stop()
-
-    @st.cache_resource
-    def initialize_qa_chain():
-        try:
-            # Get the absolute path to the PDF relative to the script
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            pdfpath = os.path.join(
-                script_dir, "data/CTP Project Design Doc (3).pdf")
-
-            # Check if PDF exists
-            if not os.path.exists(pdfpath):
-                st.error(f"PDF file not found at: {pdfpath}")
-                st.stop()
-
-            st.write(f"Loading PDF from: {pdfpath}")
-
-            # Load PDF
-            loader = PyPDFLoader(pdfpath)
-            pages = loader.load()
-
-            # Create embeddings
-            embeddings = HuggingFaceEmbeddings(
-                model_name="all-MiniLM-L12-v2",
-                model_kwargs={'device': 'cpu'}
-            )
-
-            # Create vector store
-            vectorstore = FAISS.from_documents(pages, embeddings)
-
-            # Initialize ChatOpenAI with explicit API key
-            llm = ChatOpenAI(
-                temperature=0.7,
-                api_key=api_key,
-                model="gpt-3.5-turbo",
-                max_tokens=100,
-            )
-
-            # Create the QA chain
-            qa_chain = RetrievalQA.from_chain_type(
-                llm=llm,
-                chain_type="stuff",
-                retriever=vectorstore.as_retriever(),
-            )
-
-            return qa_chain
-
-        except Exception as e:
-            st.error(f"Error in initialize_qa_chain: {str(e)}")
-            raise e
-
-    # Page title
-    st.title("Ask about our Wordle Final Project")
-
-    # Initialize session state for messages
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-
-    # Initialize QA chain
-    try:
-        with st.spinner("Loading PDF and initializing QA system..."):
-            qa_chain = initialize_qa_chain()
-        st.success("QA system initialized successfully!")
-    except Exception as e:
-        st.error(f"Error initializing QA chain: {str(e)}")
-        st.stop()
-
-    # Placeholder for chat messages
-    chat_placeholder = st.empty()
-
-    # Render chat history dynamically
-    with chat_placeholder.container():
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-
-    # Chat input with debouncing
-    if "last_prompt" not in st.session_state:
-        st.session_state.last_prompt = ""
-
-    prompt = st.chat_input("Ask a question about the Wordle Final Project")
-
-    if prompt and prompt != st.session_state.last_prompt:
-        st.session_state.last_prompt = prompt
-
-        # Display user message immediately
-        st.session_state.messages.append({"role": "user", "content": prompt})
-
-        # Refresh chat history
-        with chat_placeholder.container():
-            for message in st.session_state.messages:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
-
-        # Process the input and get a response
-        try:
-            with st.spinner("Searching document for answer..."):
-                response = qa_chain.invoke(prompt)
-
-            result = response["result"]
-
-            # Display assistant response
-            st.session_state.messages.append(
-                {"role": "assistant", "content": result})
-
-            # Refresh chat history again
-            with chat_placeholder.container():
-                for message in st.session_state.messages:
-                    with st.chat_message(message["role"]):
-                        st.markdown(message["content"])
-
-        except Exception as e:
-            st.error(f"Error processing question: {str(e)}")
