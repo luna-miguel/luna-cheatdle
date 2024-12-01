@@ -10,6 +10,7 @@ altair
 plotly
 langchain
 langchain_community
+langchain_openai
 huggingface-hub
 faiss-cpu
 openai
