@@ -9,4 +9,4 @@ pygame
 altair
 plotly
 scipy
-scikit-learn
+sklearn
