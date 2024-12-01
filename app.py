@@ -577,7 +577,7 @@ with sentiment:
     )
 
     # Load datasets
-    @st.cache(ttl=300)
+    @st.cache_data(ttl=300)
     def load_sentiment_data():
         words_freq = pd.read_csv("data/words_freq.csv")
         tweets = pd.read_csv("data/tweets.zip")
@@ -674,7 +674,7 @@ with forest:
     st.header("🎯 Score Predictor")
 
     # Load datasets
-    @st.cache(ttl=300)
+    @st.cache_data(ttl=300)
     def load_forest_data():
         tweets = pd.read_csv("data/tweets.zip")
         words = pd.read_csv("data/words_freq.csv")
