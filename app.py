@@ -13,6 +13,11 @@ from scipy.stats import entropy
 import pickle
 import altair as alt
 import plotly.express as px
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings  # Updated import
+from langchain.chains import RetrievalQA
+from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 
 st.set_page_config(
@@ -46,14 +51,12 @@ def chunks(lst, n):
 def sigmoid(x):
     return 1 / (1 + math.exp(-x))
 
-
 def get_word_list(short=False):
     result = []
     file = SHORT_WORD_LIST_FILE if short else LONG_WORD_LIST_FILE
     with open(file) as fp:
         result.extend([word.strip() for word in fp.readlines()])
     return result
-
 
 def get_word_frequencies(regenerate=False):
     if os.path.exists('data/freq_map.json') or regenerate:
@@ -75,7 +78,6 @@ def get_word_frequencies(regenerate=False):
         json.dump(freq_map, fp)
     return freq_map
 
-
 def get_frequency_based_priors(n_common=3000, width_under_sigmoid=10):
     freq_map = get_word_frequencies()
     words = np.array(list(freq_map.keys()))
@@ -94,7 +96,6 @@ def get_frequency_based_priors(n_common=3000, width_under_sigmoid=10):
         priors[word] = sigmoid(x)
     return priors
 
-
 def get_true_wordle_prior():
     words = get_word_list()
     short_words = get_word_list(short=True)
@@ -107,7 +108,6 @@ def get_possible_words(guess, pattern, word_list):
     all_patterns = get_pattern_matrix([guess], word_list).flatten()
     return list(np.array(word_list)[all_patterns == pattern])
 
-
 def get_weights(words, priors):
     frequencies = np.array([priors[word] for word in words])
     total = frequencies.sum()
@@ -115,10 +115,8 @@ def get_weights(words, priors):
         return np.zeros(frequencies.shape)
     return frequencies / total
 
-
 def words_to_int_arrays(words):
     return np.array([[ord(c)for c in w] for w in words], dtype=np.uint8)
-
 
 def generate_pattern_matrix(words1, words2):
     # Number of letters/words
@@ -174,14 +172,12 @@ def generate_pattern_matrix(words1, words2):
 
     return pattern_matrix
 
-
 def get_pattern(guess, answer):
     if PATTERN_GRID_DATA:
         saved_words = PATTERN_GRID_DATA['words_to_index']
         if guess in saved_words and answer in saved_words:
             return get_pattern_matrix([guess], [answer])[0, 0]
     return generate_pattern_matrix([guess], [answer])[0, 0]
-
 
 def generate_pattern_matrix_in_blocks(many_words1, many_words2, block_length=CHUNK_LENGTH):
     block_matrix = None
@@ -203,14 +199,13 @@ def generate_pattern_matrix_in_blocks(many_words1, many_words2, block_length=CHU
 
     return block_matrix
 
-
+@st.cache_data
 def generate_full_pattern_matrix():
     words = get_word_list()
     pattern_matrix = generate_pattern_matrix_in_blocks(words, words)
     # Save to file
     np.save('data/pattern_matrix.npy', pattern_matrix)
     return pattern_matrix
-
 
 def get_pattern_matrix(words1, words2):
     if not PATTERN_GRID_DATA:
@@ -231,7 +226,6 @@ def get_pattern_matrix(words1, words2):
     indices2 = [words_to_index[w] for w in words2]
     return full_grid[np.ix_(indices1, indices2)]
 
-
 def pattern_to_int_list(pattern):
     result = []
     curr = pattern
@@ -239,7 +233,6 @@ def pattern_to_int_list(pattern):
         result.append(curr % 3)
         curr = curr // 3
     return result
-
 
 def get_pattern_distributions(allowed_words, possible_words, weights):
     pattern_matrix = get_pattern_matrix(allowed_words, possible_words)
@@ -251,11 +244,9 @@ def get_pattern_distributions(allowed_words, possible_words, weights):
         distributions[n_range, pattern_matrix[:, j]] += prob
     return distributions
 
-
 def entropy_of_distributions(distributions, atol=1e-12):
     axis = len(distributions.shape) - 1
     return entropy(distributions, base=2, axis=axis)
-
 
 def get_entropies(allowed_words, possible_words, weights):
     if weights.sum() == 0:
@@ -263,7 +254,6 @@ def get_entropies(allowed_words, possible_words, weights):
     distributions = get_pattern_distributions(
         allowed_words, possible_words, weights)
     return entropy_of_distributions(distributions)
-
 
 def optimal_guess(allowed_words, possible_words, priors):
     if len(possible_words) == 1:
@@ -304,7 +294,6 @@ def get_next_guess(guesses, patterns, possibilities):
             choices, possibilities, st.session_state["priors"]
         )
     return st.session_state["next_guess_map"][phash]
-
 
 def analyze_guesses(guess, possibilities):
     # print("\nGuess:", guess)
@@ -436,10 +425,10 @@ def draw_guesses(surface):
 
 # Begin streamlit code:
 
-
-wordle, sentiment, forest= st.tabs(["Game", "Sentiment", "Forest"])
+wordle, sentiment, forest, rag = st.tabs(["Game", "Sentiment", "Forest", "RAG"])
 
 with wordle:
+
     def load_words_dict(file_name):
         with open(file_name, 'r') as f:
             words = [line.strip() for line in f.readlines()]
@@ -577,7 +566,6 @@ with sentiment:
     )
 
     # Load datasets
-    @st.cache_data(ttl=300)
     def load_sentiment_data():
         words_freq = pd.read_csv("data/words_freq.csv")
         tweets = pd.read_csv("data/tweets.zip")
@@ -674,7 +662,7 @@ with forest:
     st.header("🎯 Score Predictor")
 
     # Load datasets
-    @st.cache_data(ttl=300)
+    @st.cache_data
     def load_forest_data():
         tweets = pd.read_csv("data/tweets.zip")
         words = pd.read_csv("data/words_freq.csv")
@@ -688,12 +676,21 @@ with forest:
         freqs = freqs["English"].tolist()
         df = pd.merge(words, tweets, on='day')
         df.drop(columns=['tweet_id'], inplace=True)
+        averages = df.groupby("word", as_index=False)['score'].mean()
+        percents = [0.08, 4.61, 24.68, 37.27, 24.86, 7.98, 2.65]
+        labels = ["1st", "2nd", "3rd", "4th", "5th", "6th", "Loss"]
+        chart_data = pd.DataFrame(
+            {
+                "Tries": labels,
+                "Percentage": percents,
+            }
+        )
         countries = pd.read_csv("data/countries.csv")
         global_cities = pd.read_csv("data/top10_global_cities.csv")
         us_cities = pd.read_csv("data/top10_us_cities.csv")
         states = pd.read_csv("data/states.csv")
-        return freqs, df, countries, global_cities, us_cities, states
-    freqs, df, countries, global_cities, us_cities, states = load_forest_data()
+        return freqs, df, averages, countries, chart_data, global_cities, us_cities, states
+    freqs, df, averages, countries, chart_data, global_cities, us_cities, states = load_forest_data()
 
     # Load model
     @st.cache_resource
@@ -723,6 +720,7 @@ with forest:
             #    4. subtract 97 to simplify char to number representation (a = 0, b = 1, c = 2, ...)
             #    5. get frequency of each character using number representation as index to frequency array 
 
+            @st.cache_data
             def predict_score(word):
                 if (not word.isalpha() or len(word) != 5):
                     raise Exception(
@@ -741,8 +739,6 @@ with forest:
                                 freqs[df["letter_5"][0]]
                 df.drop(columns=["word"], inplace=True)
                 return model.predict(df)
-
-            averages = df.groupby("word", as_index=False)['score'].mean()
             prediction = predict_score(word)
             # If word isn't found in tweet data, None is returned for the average score
             average = None
@@ -770,18 +766,12 @@ with forest:
                 st.subheader("🥳 Streak savior!")
                 st.markdown("The average Wordle score is **3.83**. Looks like the average person should be able to figure this one out.")
             st.markdown("**Refer to the chart below to see the percentage breakdown for the results of every Wordle game!**")
-            percents = [0.08, 4.61, 24.68, 37.27, 24.86, 7.98, 2.65]
-            labels = ["1st", "2nd", "3rd", "4th", "5th", "6th", "Loss"]
-            chart_data = pd.DataFrame(
-                {
-                    "Tries": labels,
-                    "Percentage": percents,
-                }
-            )
+
             c = alt.Chart(chart_data).mark_bar().encode(x='Tries', y='Percentage')
             st.altair_chart(c, use_container_width=True) 
             st.subheader("🌎 Your word vs. the world")
 
+            @st.cache_data
             def get_bounds(scores, names, prediction):
                 if prediction > max(scores):
                     return None, float('inf')
@@ -799,6 +789,7 @@ with forest:
                     if scores[i] < prediction and scores[i] > lower:
                         lower = i
                 return higher, lower
+
             st.markdown("### Global ranking")
             st.markdown("The below chart shows a map of the world organized by the **average scores of each country**.")
             names = countries["Country"].tolist()
@@ -851,3 +842,134 @@ with forest:
                 st.markdown(f"The predicted score of your word is **higher than {names[lower]}'s score ({scores[lower]})** and **lower than {names[higher]}'s score ({scores[higher]})**.  \n")
             c = alt.Chart(us_cities).mark_bar().encode(x=alt.X('Score:Q', scale=alt.Scale(domain=(3.5, 3.67), clamp=True)), y=alt.Y('City:O').sort('x'))
             st.altair_chart(c.properties(height = 500), use_container_width=True) 
+
+with rag:
+    # Load environment variables
+    load_dotenv()
+    api_key = os.getenv("OPENAI_API_KEY")
+
+    # Set environment variable to handle tokenizer warnings
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+    # Check for API key before proceeding
+    if not api_key:
+        st.error(
+            "OpenAI API key not found! Please set OPENAI_API_KEY in your .env file")
+        st.write("1. Create a .env file in your project directory")
+        st.write(
+            "2. Add your OpenAI API key like this: OPENAI_API_KEY=sk-your_api_key_here")
+        st.write(
+            "3. Make sure the .env file is in the same directory as your Python script")
+        st.stop()
+
+    @st.cache_resource
+    def initialize_qa_chain():
+        try:
+            # Get the absolute path to the PDF relative to the script
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            pdfpath = os.path.join(
+                script_dir, "data/CTP Project Design Doc (3).pdf")
+
+            # Check if PDF exists
+            if not os.path.exists(pdfpath):
+                st.error(f"PDF file not found at: {pdfpath}")
+                st.stop()
+
+            st.write(f"Loading PDF from: {pdfpath}")
+
+            # Load PDF
+            loader = PyPDFLoader(pdfpath)
+            pages = loader.load()
+
+            # Create embeddings
+            embeddings = HuggingFaceEmbeddings(
+                model_name="all-MiniLM-L12-v2",
+                model_kwargs={'device': 'cpu'}
+            )
+
+            # Create vector store
+            vectorstore = FAISS.from_documents(pages, embeddings)
+
+            # Initialize ChatOpenAI with explicit API key
+            llm = ChatOpenAI(
+                temperature=0.7,
+                api_key=api_key,
+                model="gpt-3.5-turbo",
+                max_tokens=100,
+            )
+
+            # Create the QA chain
+            qa_chain = RetrievalQA.from_chain_type(
+                llm=llm,
+                chain_type="stuff",
+                retriever=vectorstore.as_retriever(),
+            )
+
+            return qa_chain
+
+        except Exception as e:
+            st.error(f"Error in initialize_qa_chain: {str(e)}")
+            raise e
+
+    # Page title
+    st.title("Ask about our Wordle Final Project")
+
+    # Initialize session state for messages
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    # Initialize QA chain
+    try:
+        with st.spinner("Loading PDF and initializing QA system..."):
+            qa_chain = initialize_qa_chain()
+        st.success("QA system initialized successfully!")
+    except Exception as e:
+        st.error(f"Error initializing QA chain: {str(e)}")
+        st.stop()
+
+    # Placeholder for chat messages
+    chat_placeholder = st.empty()
+
+    # Render chat history dynamically
+    with chat_placeholder.container():
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+
+    # Chat input with debouncing
+    if "last_prompt" not in st.session_state:
+        st.session_state.last_prompt = ""
+
+    prompt = st.chat_input("Ask a question about the Wordle Final Project")
+
+    if prompt and prompt != st.session_state.last_prompt:
+        st.session_state.last_prompt = prompt
+
+        # Display user message immediately
+        st.session_state.messages.append({"role": "user", "content": prompt})
+
+        # Refresh chat history
+        with chat_placeholder.container():
+            for message in st.session_state.messages:
+                with st.chat_message(message["role"]):
+                    st.markdown(message["content"])
+
+        # Process the input and get a response
+        try:
+            with st.spinner("Searching document for answer..."):
+                response = qa_chain.invoke(prompt)
+
+            result = response["result"]
+
+            # Display assistant response
+            st.session_state.messages.append(
+                {"role": "assistant", "content": result})
+
+            # Refresh chat history again
+            with chat_placeholder.container():
+                for message in st.session_state.messages:
+                    with st.chat_message(message["role"]):
+                        st.markdown(message["content"])
+
+        except Exception as e:
+            st.error(f"Error processing question: {str(e)}")
