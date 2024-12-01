@@ -11,13 +11,9 @@ plotly
 langchain
 langchain_community
 langchain_openai
-langchain-huggingface
 huggingface-hub
 faiss-cpu
 openai
 python-dotenv
 pypdf
 sentence-transformers
-torch==2.0.1
-torchvision==0.15.2
-torchaudio==2.0.2
