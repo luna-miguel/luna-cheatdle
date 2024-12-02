@@ -10,3 +10,6 @@ altair
 plotly
 scipy
 scikit-learn
+pypdf
+sentence-transformers
+faiss-cpu
