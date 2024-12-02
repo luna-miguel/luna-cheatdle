@@ -912,7 +912,7 @@ with rag:
             raise e
 
     # Page title
-    st.title("Ask about our Wordle Final Project")
+    st.title("Ask About Cheatdle")
 
     # Initialize session state for messages
     if "messages" not in st.session_state:
@@ -940,7 +940,7 @@ with rag:
     if "last_prompt" not in st.session_state:
         st.session_state.last_prompt = ""
 
-    prompt = st.chat_input("Ask a question about the Wordle Final Project")
+    prompt = st.chat_input("Ask a question about Cheatdle...")
 
     if prompt and prompt != st.session_state.last_prompt:
         st.session_state.last_prompt = prompt
