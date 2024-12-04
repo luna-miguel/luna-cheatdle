@@ -1,3 +1,4 @@
+
 import os
 import json
 import math
@@ -7,6 +8,8 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 import streamlit as st
+import datetime as dt
+from datetime import datetime
 import itertools as it
 from textblob import TextBlob
 from scipy.stats import entropy
@@ -27,7 +30,9 @@ st.set_page_config(
 
 st.logo('captures/cheatdle.png')
 
-# Begin 3Blue1Brown code below:
+wordle, sentiment, forest, rag = st.tabs(["Game", "Sentiment", "Forest", "RAG"])
+
+# Begin 3Blue1Brown-sampled code below:
 
 MISPLACED = np.uint8(1)
 EXACT = np.uint8(2)
@@ -37,10 +42,10 @@ LONG_WORD_LIST_FILE = "data/wordle-answers.txt"  # possible answers
 WORD_FREQ_FILE = "data/freq_map.json"
 PATTERN_MATRIX_FILE = "data/pattern_matrix.npy"
 ENT_SCORE_PAIRS_FILE = "data/ent_score_pairs.json"
-WORDLE_GAME_FILE = "data/guesses.json"
 
 PATTERN_GRID_DATA = dict()
 CHUNK_LENGTH = 13000
+
 
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
@@ -51,12 +56,14 @@ def chunks(lst, n):
 def sigmoid(x):
     return 1 / (1 + math.exp(-x))
 
+
 def get_word_list(short=False):
     result = []
     file = SHORT_WORD_LIST_FILE if short else LONG_WORD_LIST_FILE
     with open(file) as fp:
-        result.extend([word.strip() for word in fp.readlines()])
+        result.extend([word.strip().upper() for word in fp.readlines()])
     return result
+
 
 def get_word_frequencies(regenerate=False):
     if os.path.exists('data/freq_map.json') or regenerate:
@@ -68,7 +75,7 @@ def get_word_frequencies(regenerate=False):
     with open(WORD_FREQ_FILE) as fp:
         for line in fp.readlines():
             pieces = line.split(' ')
-            word = pieces[0]
+            word = pieces[0].upper()
             freqs = [
                 float(piece.strip())
                 for piece in pieces[1:]
@@ -77,6 +84,7 @@ def get_word_frequencies(regenerate=False):
     with open(WORD_FREQ_FILE, 'w') as fp:
         json.dump(freq_map, fp)
     return freq_map
+
 
 def get_frequency_based_priors(n_common=3000, width_under_sigmoid=10):
     freq_map = get_word_frequencies()
@@ -96,6 +104,7 @@ def get_frequency_based_priors(n_common=3000, width_under_sigmoid=10):
         priors[word] = sigmoid(x)
     return priors
 
+
 def get_true_wordle_prior():
     words = get_word_list()
     short_words = get_word_list(short=True)
@@ -104,9 +113,11 @@ def get_true_wordle_prior():
         for w in words
     )
 
+
 def get_possible_words(guess, pattern, word_list):
     all_patterns = get_pattern_matrix([guess], word_list).flatten()
     return list(np.array(word_list)[all_patterns == pattern])
+
 
 def get_weights(words, priors):
     frequencies = np.array([priors[word] for word in words])
@@ -115,8 +126,10 @@ def get_weights(words, priors):
         return np.zeros(frequencies.shape)
     return frequencies / total
 
+
 def words_to_int_arrays(words):
     return np.array([[ord(c)for c in w] for w in words], dtype=np.uint8)
+
 
 def generate_pattern_matrix(words1, words2):
     # Number of letters/words
@@ -172,12 +185,14 @@ def generate_pattern_matrix(words1, words2):
 
     return pattern_matrix
 
+
 def get_pattern(guess, answer):
     if PATTERN_GRID_DATA:
         saved_words = PATTERN_GRID_DATA['words_to_index']
         if guess in saved_words and answer in saved_words:
             return get_pattern_matrix([guess], [answer])[0, 0]
     return generate_pattern_matrix([guess], [answer])[0, 0]
+
 
 def generate_pattern_matrix_in_blocks(many_words1, many_words2, block_length=CHUNK_LENGTH):
     block_matrix = None
@@ -199,13 +214,14 @@ def generate_pattern_matrix_in_blocks(many_words1, many_words2, block_length=CHU
 
     return block_matrix
 
-@st.cache_data
+
 def generate_full_pattern_matrix():
     words = get_word_list()
     pattern_matrix = generate_pattern_matrix_in_blocks(words, words)
     # Save to file
     np.save('data/pattern_matrix.npy', pattern_matrix)
     return pattern_matrix
+
 
 def get_pattern_matrix(words1, words2):
     if not PATTERN_GRID_DATA:
@@ -226,6 +242,7 @@ def get_pattern_matrix(words1, words2):
     indices2 = [words_to_index[w] for w in words2]
     return full_grid[np.ix_(indices1, indices2)]
 
+
 def pattern_to_int_list(pattern):
     result = []
     curr = pattern
@@ -233,6 +250,7 @@ def pattern_to_int_list(pattern):
         result.append(curr % 3)
         curr = curr // 3
     return result
+
 
 def get_pattern_distributions(allowed_words, possible_words, weights):
     pattern_matrix = get_pattern_matrix(allowed_words, possible_words)
@@ -244,9 +262,11 @@ def get_pattern_distributions(allowed_words, possible_words, weights):
         distributions[n_range, pattern_matrix[:, j]] += prob
     return distributions
 
+
 def entropy_of_distributions(distributions, atol=1e-12):
     axis = len(distributions.shape) - 1
     return entropy(distributions, base=2, axis=axis)
+
 
 def get_entropies(allowed_words, possible_words, weights):
     if weights.sum() == 0:
@@ -255,6 +275,7 @@ def get_entropies(allowed_words, possible_words, weights):
         allowed_words, possible_words, weights)
     return entropy_of_distributions(distributions)
 
+
 def optimal_guess(allowed_words, possible_words, priors):
     if len(possible_words) == 1:
         return possible_words[0]
@@ -262,21 +283,16 @@ def optimal_guess(allowed_words, possible_words, priors):
     ents = get_entropies(allowed_words, possible_words, weights)
 
     top_ent = sorted(ents)[-10:]
-    # print('top_ent:', top_ent)
     top_i = sorted(np.argsort(ents)[-10:])[::-1]
-    # print('top_i:', top_i)
     top_guesses = []
     for num in top_i:
         top_guesses.append(allowed_words[num])
-    # print('top_guesses:', top_guesses)
 
-    # print('Suggestions: ', end='')
     st.session_state["suggestions"] = {}
     for i in range(10):
         st.session_state["suggestions"][i] = {
             top_guesses[i]: top_ent[i]
         }
-        # print(top_guesses[i], end=', ')
 
     return (allowed_words[np.argmax(ents)])
 
@@ -289,25 +305,20 @@ def get_next_guess(guesses, patterns, possibilities):
         for g, p in zip(guesses, patterns)
     )
     if phash not in st.session_state["next_guess_map"]:
-        choices = all_words
+        choices = st.session_state["DICT_ANSWERS"]
         st.session_state["next_guess_map"][phash] = optimal_guess(
             choices, possibilities, st.session_state["priors"]
         )
-    return st.session_state["next_guess_map"][phash]
+
 
 def analyze_guesses(guess, possibilities):
-    # print("\nGuess:", guess)
-    pattern = get_pattern(guess, st.session_state["answer"].lower())
-    # guesses.append(guess)
+    pattern = get_pattern(guess, st.session_state["answer"])
     st.session_state["patterns"].append(pattern)
 
     possibilities = get_possible_words(guess, pattern, possibilities)
-    # print("Possibilities:", possibilities[:12])
-    # print("Possibilities count:", len(possibilities))
 
-    next_guess = get_next_guess(
-        st.session_state["guesses_lower"], st.session_state["patterns"], possibilities)
-    # print('\nNext best Guess:', next_guess)
+    get_next_guess(st.session_state["guesses"],
+                   st.session_state["patterns"], possibilities)
     return possibilities
 
 
@@ -321,7 +332,7 @@ def get_stats(data):
     }
     for index in data:
         for word, ent in data[index].items():
-            stats['Top picks'].insert(0, word)
+            stats['Top picks'].insert(0, word.lower())
             stats['E[Info.]'].insert(0, ent)
     return stats
 
@@ -338,12 +349,7 @@ def load_dict(file_name, upper=True):
             return [word for word in words]
 
 
-# Initialize game variables
-# necessary for 3b1b word matrix and guess suggestions
-DICT_GUESSING = load_dict('data/wordle-answers.txt')
-DICT_ANSWERS = load_dict('data/wordle-answers.txt')
-ANSWER = random.choice(DICT_ANSWERS)
-all_words = load_dict('data/wordle-answers.txt', upper=False)
+# Initialize necessary variables for Wordle clone
 
 WIDTH = 600
 HEIGHT = 700
@@ -364,18 +370,21 @@ FONT_SMALL = pygame.font.SysFont("free sans bold", SQ_SIZE // 2)
 
 if "guesses" not in st.session_state:
     # Streamlit state initialization
+    st.session_state["DICT_GUESSING"] = load_dict('data/wordle-answers.txt')
+    st.session_state["DICT_ANSWERS"] = load_dict('data/wordle-answers.txt')
     st.session_state["guesses"] = []
-    st.session_state["guesses_lower"] = []
     st.session_state["input"] = ""
-    st.session_state["answer"] = ANSWER
-    # print('Answer:', ANSWER)
+    st.session_state["answer"] = random.choice(
+        st.session_state["DICT_ANSWERS"])
+    st.session_state["answer_date"] = None
+    st.session_state["all_wordles"] = None
     st.session_state["unguessed"] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     st.session_state["game_over"] = False
     st.session_state["priors"] = get_frequency_based_priors()
     st.session_state["next_guess_map"] = {}
     st.session_state["patterns"] = []
     st.session_state["possibilities"] = list(
-        filter(lambda w: st.session_state["priors"][w] > 0, all_words))
+        filter(lambda w: st.session_state["priors"][w] > 0, st.session_state["DICT_ANSWERS"]))
     # Default guess suggestions:
     st.session_state["suggestions"] = {"0": {"trace": 5.8003640125599665}, "1": {"stare": 5.820775159036701}, "2": {"snare": 5.823403587185409}, "3": {"slate": 5.872115140997043}, "4": {
         "raise": 5.877133130432676}, "5": {"irate": 5.8857096269200975}, "6": {"crate": 5.895912778048746}, "7": {"crane": 5.896998055971093}, "8": {"arose": 5.9015186142727085}, "9": {"arise": 5.91076001137177}}
@@ -423,35 +432,81 @@ def draw_guesses(surface):
             x += SQ_SIZE + MARGIN
         y += SQ_SIZE + MARGIN
 
-# Begin streamlit code:
 
-wordle, sentiment, forest, rag = st.tabs(["Game", "Sentiment", "Forest", "RAG"])
+# Begin Streamlit code:
 
 with wordle:
-
-    def load_words_dict(file_name):
-        with open(file_name, 'r') as f:
-            words = [line.strip() for line in f.readlines()]
-            return [word.lower() for word in words]
 
     def render_frame():
         surface = pygame.Surface((WIDTH, HEIGHT))
         surface.fill("white")
         letters = FONT_SMALL.render(st.session_state["unguessed"], False, GREY)
-        surface.blit(letters, letters.get_rect(
-            center=(WIDTH // 2, T_MARGIN // 2)))
+        surface.blit(letters, letters.get_rect(center=(WIDTH // 2, T_MARGIN // 2)))
         draw_guesses(surface)
         return pygame.surfarray.array3d(surface).swapaxes(0, 1)
 
+
+    def get_wordle_by_date():
+        if st.session_state["answer_date"]:
+            if not st.session_state["all_wordles"]:
+                # initialize all_wordles dict to refer back to throughout session
+                if os.path.exists('data/all_wordles.json'):
+                    with open('data/all_wordles.json') as fp:
+                        # load json of all past wordles and their date of occurence
+                        st.session_state["all_wordles"] = json.load(fp)
+                        return get_wordle_by_date()
+                else:
+                    st.error(
+                        f'Could not retrieve Wordle for {st.session_state["answer_date"]}, randomized answer instead.')
+            else:
+                if st.session_state["answer_date"] in st.session_state["all_wordles"]:
+                    return st.session_state["all_wordles"][st.session_state["answer_date"]]
+                else:
+                    # if date not found in dict
+                    selected = datetime.strptime(
+                        st.session_state["answer_date"], '%Y-%m-%d').date()
+                    latest = datetime.strptime(
+                        next(iter(st.session_state["all_wordles"])), '%Y-%m-%d').date()
+                    if selected > latest:
+                        st.error(
+                            f"We\'re so sorry! The last time this project was updated was {latest.strftime(' % B % -d, % Y')}. We randomized the answer instead.")
+                    else:
+                        st.error(
+                            f'Could not retrieve Wordle for {st.session_state["answer_date"]}, randomized answer instead.')
+        if st.session_state["answer_date"]:
+            # if date not found in all_wordles dict
+            st.session_state["answer_date"] = None
+        # if date not provided or error encountered preventing date-wordle matching:
+        return random.choice(st.session_state["DICT_ANSWERS"])
+
+
     def rerun():
-        st.write("")  # originally st.rerun(), which triggers a warning
+        # replaces st.rerun(), which triggers a warning in callbacks
+        st.write("")  # reloads page
+
+    def reset_game():
+        st.session_state["guesses"] = []
+        st.session_state["input"] = ""
+        st.session_state["answer"] = random.choice(
+            st.session_state["DICT_ANSWERS"]) if not st.session_state["answer_date"] else get_wordle_by_date()
+        st.session_state["unguessed"] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        st.session_state["game_over"] = False
+        st.session_state["game_won"] = False
+        st.session_state["priors"] = get_frequency_based_priors()
+        st.session_state["next_guess_map"] = {}
+        st.session_state["patterns"] = []
+        st.session_state["possibilities"] = list(
+            filter(lambda w: st.session_state["priors"][w] > 0, st.session_state["DICT_ANSWERS"]))
+        # Default guess suggestions:
+        st.session_state["suggestions"] = {"0": {"trace": 5.8003640125599665}, "1": {"stare": 5.820775159036701}, "2": {"snare": 5.823403587185409}, "3": {"slate": 5.872115140997043}, "4": {
+            "raise": 5.877133130432676}, "5": {"irate": 5.8857096269200975}, "6": {"crate": 5.895912778048746}, "7": {"crane": 5.896998055971093}, "8": {"arose": 5.9015186142727085}, "9": {"arise": 5.91076001137177}}
+
 
     def input_guess():
         guess = st.session_state.guess.upper()
         if len(guess) == 5:
-            if guess in DICT_GUESSING:
+            if guess in st.session_state["DICT_GUESSING"]:
                 st.session_state["guesses"].append(guess)
-                st.session_state["guesses_lower"].append(guess.lower())
                 st.session_state["unguessed"] = determine_unguessed_letters(
                     st.session_state["guesses"])
                 st.session_state["game_over"] = (
@@ -465,6 +520,18 @@ with wordle:
         st.session_state.guess = ""
         rerun()
 
+
+    def update_answer():
+        if st.session_state.date:
+            st.session_state["answer_date"] = st.session_state.date.strftime(
+                '%Y-%m-%d')  # Format as 'YYYY-mm-dd' string
+        else:
+            st.session_state["answer_date"] = None
+        st.session_state["answer"] = get_wordle_by_date()
+        reset_game()
+        # st.write(st.session_state["answer_date"], st.session_state["answer"])  # for testing
+
+
     if st.session_state["game_over"]:
         if st.session_state["game_won"]:
             st.success(f"Congratulations! Score: {len(st.session_state['guesses'])}/6")
@@ -472,10 +539,22 @@ with wordle:
             st.error(
                 f"Game Over! The correct word was {st.session_state['answer']}")
 
-    [game, empty, stats] = st.columns([0.5, 0.1, 0.4])
 
-    with game:
-        st.subheader("Wordle Game")
+    # Streamlit top buttons code:
+
+    [date, empty] = st.columns([0.4, 0.6])
+
+    with date:
+        st.date_input('Select Wordle (Random if unspecified)', value=None, min_value=dt.date(
+            2021, 6, 19), max_value=dt.date.today(), format='MM/DD/YYYY', key='date', on_change=update_answer)
+
+    # Remaining Streamlit code
+
+    [wordle, empty, stats] = st.columns([0.5, 0.1, 0.4])
+
+    with wordle:
+        wordle_type = st.session_state["answer_date"] if st.session_state["answer_date"] else 'Random'
+        st.subheader(f"{wordle_type} Wordle")
 
         frame = render_frame()
         frame_image = Image.fromarray(frame)
@@ -507,21 +586,7 @@ with wordle:
                 </style>""", unsafe_allow_html=True)
 
             if st.button("Restart Game"):
-                st.session_state["guesses"] = []
-                st.session_state["guesses_lower"] = []
-                st.session_state["input"] = ""
-                st.session_state["answer"] = random.choice(DICT_ANSWERS)
-                st.session_state["unguessed"] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                st.session_state["game_over"] = False
-                st.session_state["game_won"] = False
-                st.session_state["priors"] = get_frequency_based_priors()
-                st.session_state["next_guess_map"] = {}
-                st.session_state["patterns"] = []
-                st.session_state["possibilities"] = list(
-                    filter(lambda w: st.session_state["priors"][w] > 0, all_words))
-                # Default guess suggestions:
-                st.session_state["suggestions"] = {"0": {"trace": 5.8003640125599665}, "1": {"stare": 5.820775159036701}, "2": {"snare": 5.823403587185409}, "3": {"slate": 5.872115140997043}, "4": {
-                    "raise": 5.877133130432676}, "5": {"irate": 5.8857096269200975}, "6": {"crate": 5.895912778048746}, "7": {"crane": 5.896998055971093}, "8": {"arose": 5.9015186142727085}, "9": {"arise": 5.91076001137177}}
+                reset_game()
                 st.rerun()
 
     with stats:
@@ -529,7 +594,7 @@ with wordle:
 
         if len(st.session_state["guesses"]) > 0:
             st.session_state["possibilities"] = analyze_guesses(
-                st.session_state["guesses_lower"][-1], st.session_state["possibilities"])
+                st.session_state["guesses"][-1], st.session_state["possibilities"])
 
         if not st.session_state["game_over"]:
             if len(st.session_state["possibilities"]) < 3:
@@ -538,23 +603,18 @@ with wordle:
                     'E[Info.]': []
                 }
                 for word in st.session_state["possibilities"]:
-                    stats['Top picks'].append(word)
+                    stats['Top picks'].append(word.lower())
                     stats['E[Info.]'].append('')
             else:
                 stats = get_stats(st.session_state["suggestions"])
             df = pd.DataFrame(stats)
             st.dataframe(df, width=200, hide_index=True)
 
-    st.divider()
-    
-    st.subheader(f'Possible Answers: {len(st.session_state["possibilities"])}')
-    show_answers = st.checkbox(label="Show Possible Answers")
-
-    if show_answers:
-        st.write(st.session_state["possibilities"])
-    else:
-        st.empty()  # Clear the content when unchecked
-
+    if not st.session_state["game_over"]:
+        st.divider()
+        st.subheader(f'Possible Answers: {len(st.session_state["possibilities"])}')
+        if st.checkbox(label="Show Possible Answers"):
+            st.write(st.session_state["possibilities"])
 
 with sentiment:
     st.header("🚀 Sentiment Analysis")
@@ -566,11 +626,12 @@ with sentiment:
     )
 
     # Load datasets
-    def load_sentiment_data():
+    try:
         words_freq = pd.read_csv("data/words_freq.csv")
         tweets = pd.read_csv("data/tweets.zip")
-        return words_freq, tweets
-    words_freq, tweets = load_sentiment_data()
+    except FileNotFoundError as e:
+        st.error(f"Error: {e}. Ensure the file paths are correct.")
+        st.stop()
 
     # Input Word
     word = st.text_input("Enter a 5-letter Wordle word:", max_chars=5, key="sentiment").lower()
@@ -702,8 +763,8 @@ with forest:
 
     st.markdown(
     """
-    Enter any **5-letter Wordle word**, and we'll predict the average number of guesses it'll take someone to guess it!  
-    We'll also visualize statistics from around the world and provide comparisons to see how your word will stack up.
+    Enter any **5-letter Wordle word**, and we'll predict the number of guesses it'll take everyone to get it! 💭
+    We'll also show worldwide statistics to see how your word stacks up.
     """)
     word = st.text_input("Enter a 5-letter Wordle word:", max_chars=5, key="forest").lower()
     if word:
@@ -868,7 +929,7 @@ with rag:
             # Get the absolute path to the PDF relative to the script
             script_dir = os.path.dirname(os.path.abspath(__file__))
             pdfpath = os.path.join(
-                script_dir, "data/CTP Project Design Doc (3).pdf")
+                script_dir, "data/CTP Project Design Doc.pdf")
 
             # Check if PDF exists
             if not os.path.exists(pdfpath):

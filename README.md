@@ -8,7 +8,7 @@
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-<!-- [![MIT License][license-shield]][license-url] -->
+
 
 <!-- PROJECT LOGO -->
 <br />
@@ -22,14 +22,15 @@
     <a href="https://github.com/ahmadbasyouni10/Cheatdle"><strong>Explore »</strong></a>
     <br />
     <br />
-    <a href="">View Project Site</a>
+    <a href="https://cheatdle.streamlit.app/">View Project Site</a>
+    ·
+    <a href="https://cheatdle-rag.streamlit.app/">View Project RAG</a>
     ·
     <a href="https://github.com/ahmadbasyouni10/Cheatdle/issues">Report Bug</a>
     ·
     <a href="https://github.com/ahmadbasyouni10/Cheatdle/pulls">Request Feature</a>
   </p>
 </div>
-
 
 
 <!-- TABLE OF CONTENTS -->
@@ -58,7 +59,6 @@
 </details>
 
 
-
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
@@ -74,7 +74,6 @@ Originally an adaptation of 3Blue1Brown's video, _[Solving Wordle using informat
 
 You can learn more about this project by referring to the project design document, or by asking the project RAG!
 
-
 ### Built With
 [![Python][Python]][Python-url]
 [![Numpy][Numpy]][Numpy-url]
@@ -87,7 +86,6 @@ You can learn more about this project by referring to the project design documen
 [![Pygame][Pygame]][Pygame-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- GETTING STARTED -->
@@ -113,7 +111,7 @@ python -m ensurepip --upgrade
 
 1. Clone the repo
    ```sh
-   git clone https://github.com/github_username/repo_name.git
+   git clone https://github.com/ahmadbasyouni10/Cheatdle.git
    ```
 2. Install PIP packages
    ```sh
@@ -127,55 +125,45 @@ python -m ensurepip --upgrade
 5. In the project's root directory, create a `.env` file with the following contents:
    ```
    OPENAI_API_KEY=sk-your_api_key_here
-   ``` 
+   ```
+**NOTE:** This repository contains a different implementation of Cheatdle without Pygame or the RAG included, due to memory limitations on Streamlit Community Cloud.
+If you would like to use a version that contains all features and a Pygame implementation of Wordle in one app, refer to the fork `luna-cheatdle`.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
-
 ### Wordle Solver
+1. Enter your valid five-letter Wordle guess into the input prompt.
+2. The game boxes with the guess information, the right entropy table, and the below list of candidate answers will update.
+3. Repeat until the game is won or lost, and restart with a new word, if desired.
+
+![image](https://github.com/user-attachments/assets/74004d6c-73d1-4ee8-8ecc-be0d93a828cb)
 
 ### Wordle Score Predictor
+1. Enter your five-letter Wordle guess into the input prompt.
+2. The model will predict the average score it will take for the general public to guess.
+3. You can view guess statistics, and the app will compare it with the generated inference.
+
+![image](https://github.com/user-attachments/assets/6b986326-ea85-491e-a708-8c822d67a6e6)
 
 ### Wordle Answer Sentiment Analysis
+1. Enter your valid five-letter Wordle guess into the input prompt.
+2. If the word you entered is in the tweet dataset, it will use tweets with that word to generate sentiment analysis.
+3. You can also view the sentiment analysis as the average in chart form, or as a breakdown of all sentiments.
+
+![image](https://github.com/user-attachments/assets/80cc87bf-f93c-443b-b6f1-fa74e752d8ec)
 
 ### Cheatdle Project RAG
+1. Enter any prompt related to the Cheatdle project.
+2. The RAG will scan the design document and create a response.
+3. That response will be added to the text log, which will update and be displayed to the user.
 
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- CONTRIBUTING -->
-## Contributing
-
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated!**
-
-Have any other ideas of how to cheat in Wordle? Please fork the repo and create a pull request. You can also open an issue with the tag "enhancement".
-
-Don't forget to give the project a star! Thanks again!
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+![image](https://github.com/user-attachments/assets/63c00a0d-0329-4266-8cd3-c233fb5fd42d)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-<!-- LICENSE 
-## License
-
-Distributed under the MIT License. See `LICENSE.txt` for more information.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
--->
 
 
 <!-- CONTACT -->
@@ -203,7 +191,6 @@ Special thanks to:
 * [Zack DeSario](https://www.linkedin.com/in/zackd/)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
